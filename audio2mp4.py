@@ -80,9 +80,22 @@ def create_audio_visualizer(
   if bg_image_path:
     img = Image.open(bg_image_path)
     if bg_image_type == "streach":
-      # アスペクト比を維持しつつ、動画サイズにフィット（はみ出す部分はクロップ）
-      img = ImageOps.fit(img, video_size, Image.Resampling.LANCZOS)
-      ax.imshow(img, extent=[0, video_size[0], 0, video_size[1]])
+      # アスペクト比を維持し、動画サイズ内に収める処理
+      img_ratio = img.width / img.height
+      video_ratio = video_size[0] / video_size[1]
+      if img_ratio > video_ratio:
+        # 画像が横長の場合：幅を揃えて高さを計算
+        new_width = video_size[0]
+        new_height = int(new_width / img_ratio)
+      else:
+        # 画像が縦長の場合：高さを揃えて幅を計算
+        new_height = video_size[1]
+        new_width = int(new_height * img_ratio)
+      img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+      # 中央配置：はみ出しなく上下左右中央に表示
+      left = (video_size[0] - new_width) // 2
+      bottom = (video_size[1] - new_height) // 2
+      ax.imshow(img, extent=[left, left + new_width, bottom, bottom + new_height])
     elif bg_image_type == "center":
       w, h = img.size
       left = (video_size[0] - w) / 2
