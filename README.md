@@ -55,6 +55,7 @@ python audio2mp4.py input.mp3
 | `--viz-color` | ビジュアライザーの色 (`gradation` で赤→青グラデーション) | `gradation` |
 | `--loop-count` | 音声のループ回数 | `1` |
 | `--bg-image` | 背景画像パス | なし |
+| `--bg-image-type` | 背景画像の配置方法。<br>・`streach`: 画像の縦横比を維持し、動画サイズ内に収まるよう中央配置<br>・`center`: 画像をそのまま中央に配置<br>・`tile`: 画像をタイル状に並べる。 | `streach` |
 | `--effect` | `fade` を指定するとフェードアウト効果 | なし |
 
 #### 実行例
