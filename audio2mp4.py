@@ -124,7 +124,7 @@ def create_audio_visualizer(
 
   # Create color array for bars
   if viz_color == "gradation":
-    colors = LinearSegmentedColormap.from_list("custom", ["blue", "red"])(np.linspace(0, 1, n_bars))
+    colors = LinearSegmentedColormap.from_list("custom", ["red", "blue"])(np.linspace(0, 1, n_bars))
   else:
     colors = [viz_color] * n_bars
 
@@ -211,7 +211,7 @@ def main():
   parser.add_argument('--viz-width', type=int, default=1080, help='Visualizer width in pixels')
   parser.add_argument('--viz-height', type=int, default=520, help='Visualizer height in pixels')
   parser.add_argument('--bg-color', default='black', help='Background color')
-  parser.add_argument('--viz-color', default='gradation', help='Visualizer color (use "gradation" for blue-to-red gradient)')
+  parser.add_argument('--viz-color', default='gradation', help='Visualizer color (use "gradation" for red-to-blue gradient)')
   parser.add_argument('--loop-count', type=int, default=1, help='Number of times to loop the audio')
   parser.add_argument('--bg-image', help='Path to background image file')
   parser.add_argument('--bg-image-type', default='streach', help='Background image type (streach, center, tile)')

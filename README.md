@@ -52,7 +52,7 @@ python audio2mp4.py input.mp3
 | `--viz-width` | ビジュアライザーの幅 (px) | `1080` |
 | `--viz-height` | ビジュアライザーの高さ (px) | `520` |
 | `--bg-color` | 背景色 (`black`, `white` など) | `black` |
-| `--viz-color` | ビジュアライザーの色 (`gradation` で青→赤グラデーション) | `gradation` |
+| `--viz-color` | ビジュアライザーの色 (`gradation` で赤→青グラデーション) | `gradation` |
 | `--loop-count` | 音声のループ回数 | `1` |
 | `--bg-image` | 背景画像パス | なし |
 | `--effect` | `fade` を指定するとフェードアウト効果 | なし |
