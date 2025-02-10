@@ -4,6 +4,8 @@
 MP3音声ファイルからオーディオビジュアライザー付きのMP4動画を生成するPythonプログラムです。
 音声の波形を視覚的に表示しながら動画化し、背景画像やフェードエフェクトの適用も可能できます。
 
+実行例は高見知英のYouTube個人チャンネルなどをみるとあるかもしれない。
+[個人YouTube](https://www.youtube.com/@TakamiChie)
 ---
 
 ## 1. ユーザー向け使用方法
@@ -78,3 +80,15 @@ python audio2mp4.py input.mp3
 - `librosa` を使用して音声波形を解析し、`matplotlib` でアニメーション化しています。
 
 このスクリプトを活用し、オーディオビジュアライザー付きの動画を作成してみてください！
+
+### AIでどこまでいけるか試す試み
+
+とりあえずAIでどこまで行けるか試しながらやってみる試み実行中。
+
+会話ログについてはなるべく以下のAI問答集にまとめています。
+
+- [AI問答集トップページ](https://takamichie.notion.site/67c7609855084fd186f9e059ab70f327?v=12aa62c17a4640b0b4e087eea283d7ab&pvs=4)
+  - [基本コード](https://takamichie.notion.site/Audio-Visualizer-with-Customizable-MP4-Video-Generation-19460d1e6e79804ca6ecc040546d1f9a?pvs=4)
+  - [README](https://takamichie.notion.site/19660d1e6e7980d0939ede83107f3fed?pvs=4)
+
+以降についてはGitHub Copilotで補足しているのでここに書いてない場合があります。
