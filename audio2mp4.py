@@ -36,6 +36,7 @@ def create_audio_visualizer(
   viz_color="gradation",
   loop_count=1,
   bg_image_path=None,
+  bg_image_type="streach",
   effect=""
 ):
   # Load audio file
@@ -77,8 +78,21 @@ def create_audio_visualizer(
   # Set background image if provided
   if bg_image_path:
     img = Image.open(bg_image_path)
-    img = img.resize(video_size)
-    ax.imshow(img, extent=[0, video_size[0], 0, video_size[1]])
+    if bg_image_type == "streach":
+      img = img.resize(video_size)
+      ax.imshow(img, extent=[0, video_size[0], 0, video_size[1]])
+    elif bg_image_type == "center":
+      w, h = img.size
+      left = (video_size[0] - w) / 2
+      bottom = (video_size[1] - h) / 2
+      ax.imshow(img, extent=[left, left + w, bottom, bottom + h])
+    elif bg_image_type == "tile":
+      new_img = Image.new('RGB', video_size)
+      w, h = img.size
+      for i in range(0, video_size[0], w):
+        for j in range(0, video_size[1], h):
+          new_img.paste(img, (i, j))
+      ax.imshow(new_img, extent=[0, video_size[0], 0, video_size[1]])
 
   # Calculate visualization area
   viz_left = (video_size[0] - viz_size[0]) / 2
@@ -185,6 +199,7 @@ def main():
   parser.add_argument('--viz-color', default='gradation', help='Visualizer color (use "gradation" for blue-to-red gradient)')
   parser.add_argument('--loop-count', type=int, default=1, help='Number of times to loop the audio')
   parser.add_argument('--bg-image', help='Path to background image file')
+  parser.add_argument('--bg-image-type', default='streach', help='Background image type (streach, center, tile)')
   parser.add_argument('--effect', default='', help='Audio effect (use "fade" for fade-out effect)')
 
   args = parser.parse_args()
@@ -198,6 +213,7 @@ def main():
     args.viz_color,
     args.loop_count,
     args.bg_image,
+    args.bg_image_type,
     args.effect
   )
 
