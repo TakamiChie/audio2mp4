@@ -11,6 +11,7 @@ import tempfile
 from matplotlib.colors import LinearSegmentedColormap
 from PIL import Image
 import soundfile as sf
+from PIL import ImageOps  # ファイル冒頭でimportを追加
 
 def create_fade_mask(duration_seconds, sr=44100, fade_duration=2):
   """フェードアウトマスクを作成する関数"""
@@ -79,7 +80,8 @@ def create_audio_visualizer(
   if bg_image_path:
     img = Image.open(bg_image_path)
     if bg_image_type == "streach":
-      img = img.resize(video_size)
+      # アスペクト比を維持しつつ、動画サイズにフィット（はみ出す部分はクロップ）
+      img = ImageOps.fit(img, video_size, Image.Resampling.LANCZOS)
       ax.imshow(img, extent=[0, video_size[0], 0, video_size[1]])
     elif bg_image_type == "center":
       w, h = img.size
