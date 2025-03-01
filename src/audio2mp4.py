@@ -11,6 +11,7 @@ import tempfile
 from matplotlib.colors import LinearSegmentedColormap
 from PIL import Image, ImageOps
 import soundfile as sf
+from mutagen import File as MutagenFile  # 追加: mutagenでID3タグ読み込み
 
 def create_fade_mask(duration_seconds, sr=44100, fade_duration=2):
   """フェードアウトマスクを作成する関数"""
@@ -171,14 +172,44 @@ def create_audio_visualizer(
   loop_count=1,
   bg_image_path=None,
   bg_image_type="streach",
-  effect=""
+  effect="",
+  title=None,
+  subtitle=None,
+  summary=None
 ):
+  # ID3タグから情報取得（省略時）
+  audiofile = MutagenFile(mp3_path, easy=True)
+  if title is None and 'album' in audiofile:
+    title = audiofile['album'][0]
+  if subtitle is None and 'title' in audiofile:
+    subtitle = audiofile['title'][0]
+  if summary is None and 'comment' in audiofile:
+    summary = audiofile['comment'][0].splitlines()[0]
+
   # 音声の準備
   y, sr, duration, temp_audio_path = prepare_audio(mp3_path, loop_count, effect)
 
   # 図と軸のセットアップ
   fig, ax = setup_figure(video_size, bg_color)
   draw_background(ax, video_size, bg_image_path, bg_image_type)
+
+  # タイトル・サブタイトル・詳細文を動画左上に描画
+  text_lines = []
+  if title:
+    text_lines.append(title)
+  if subtitle:
+    text_lines.append(subtitle)
+  if summary:
+    text_lines.append(summary)
+  if text_lines:
+    text = "\n".join(text_lines)
+    ax.text(
+      10, video_size[1] - 10, text,
+      color="white",
+      fontsize=16,
+      verticalalignment="top",
+      bbox=dict(facecolor="black", alpha=0.5)
+    )
 
   # ビジュアライザーの準備
   n_bars = 50
@@ -213,6 +244,9 @@ def main():
   parser.add_argument('--bg-image', help='Path to background image file')
   parser.add_argument('--bg-image-type', default='streach', help='Background image type (streach, center, tile)')
   parser.add_argument('--effect', default='', help='Audio effect (use "fade" for fade-out effect)')
+  parser.add_argument('--title', help='Title text to display (default: ID3 album name)')
+  parser.add_argument('--subtitle', help='Subtitle text to display (default: ID3 title)')
+  parser.add_argument('--summary', help='Summary text to display (default: first line of ID3 comment)')
 
   args = parser.parse_args()
 
@@ -226,7 +260,10 @@ def main():
     args.loop_count,
     args.bg_image,
     args.bg_image_type,
-    args.effect
+    args.effect,
+    args.title,
+    args.subtitle,
+    args.summary
   )
 
 if __name__ == '__main__':
