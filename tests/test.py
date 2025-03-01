@@ -149,5 +149,36 @@ class TestAudio2MP4(unittest.TestCase):
       audio_instance.close.assert_called()
       final_instance.close.assert_called()
 
+  def test_draw_text(self):
+    import matplotlib.pyplot as plt
+    from pathlib import Path
+    from src.audio2mp4 import draw_text
+
+    # テスト用の図と軸の作成
+    video_size = (640, 480)
+    fig, ax = plt.subplots(figsize=(video_size[0]/100, video_size[1]/100))
+
+
+    # テスト用テキストとフォント名
+    sample_text = "これはテストです"
+    sample_font = "Meiryo"
+
+    # draw_text関数の呼び出し
+    text_obj = draw_text(ax, video_size, sample_text, sample_font)
+
+    # テキストオブジェクトの各プロパティの検証
+    self.assertIsNotNone(text_obj)
+    self.assertEqual(text_obj.get_text(), sample_text)
+    self.assertEqual(text_obj.get_alpha(), 0)  # 初期は非表示（alpha=0）になっている
+    self.assertEqual(text_obj.get_fontname(), sample_font)
+
+    # 作成した画像を tests/out に保存（削除はしない）
+    out_dir = Path(__file__).parent / "out"
+    out_dir.mkdir(exist_ok=True)
+    save_path = out_dir / "draw_text_test.png"
+    fig.savefig(str(save_path))
+
+    plt.close(fig)
+
 if __name__ == '__main__':
   unittest.main()
