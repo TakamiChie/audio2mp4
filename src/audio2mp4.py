@@ -108,16 +108,16 @@ def setup_visualizer(ax, video_size, viz_size, viz_color, n_bars=50):
   )
   return bars
 
-def draw_text(ax, video_size, text, font_name="BIZ UDGothic"):
-  """テキストを描画する関数。初期は非表示（alpha=0）。
-     フォント名は font_name で指定可能。
+def draw_text(ax, video_size, text, font_name="BIZ UDGothic", init_alpha=0):
+  """テキストを描画する関数。初期の透明度は init_alpha で指定可能。
+     テスト時に初期表示させたい場合は init_alpha を 1 など適宜指定してください。
   """
   txt = ax.text(
     10, video_size[1] - 10, text,
     color="white",
     fontsize=16,
     verticalalignment="top",
-    alpha=0,
+    alpha=init_alpha,
     fontname=font_name,
     bbox=dict(facecolor="black", alpha=0.5)
   )
