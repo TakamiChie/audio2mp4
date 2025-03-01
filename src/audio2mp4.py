@@ -123,7 +123,7 @@ def draw_text(ax, video_size, text, font_name="BIZ UDGothic", init_alpha=0):
   )
   return txt
 
-def update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars=50, text_obj=None, fade_start=2, fade_duration=1):
+def update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars=50, text_objs=None, fade_start=2, fade_duration=1):
   """アニメーション更新用のコールバック関数。バーの更新に加え、指定があればテキストのフェードインも行う"""
   time = (frame / 30) % duration
   start_idx = int(time * sr)
@@ -145,22 +145,22 @@ def update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars=50, 
     for bar, val in zip(bars, new_heights):
       bar.set_height(val)
 
-  if text_obj is not None:
-    # フェードイン開始時間 (秒) より前は非表示、以降は徐々に alpha を上げる
-    if time >= fade_start:
-      alpha = min((time - fade_start) / fade_duration, 1.0)
-    else:
-      alpha = 0
-    text_obj.set_alpha(alpha)
-    return bars + (text_obj,)
+  if text_objs:
+    for obj in text_objs:
+      if time >= fade_start:
+        alpha = min((time - fade_start) / fade_duration, 1.0)
+      else:
+        alpha = 0
+      obj.set_alpha(alpha)
+    return bars + tuple(text_objs)
   return bars
 
-def create_animation(fig, y, sr, duration, bars, viz_size, video_size, n_bars=50, text_obj=None, fade_start=2, fade_duration=1):
-  """FuncAnimation によるアニメーションの作成。テキストオブジェクトがあればフェードインも更新する"""
+def create_animation(fig, y, sr, duration, bars, viz_size, video_size, n_bars=50, text_objs=None, fade_start=2, fade_duration=1):
+  """FuncAnimation によるアニメーションの作成。テキストオブジェクト群があればフェードインも更新する"""
   total_frames = int(duration * 30)
   anim = FuncAnimation(
     fig,
-    lambda frame: update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars, text_obj, fade_start, fade_duration),
+    lambda frame: update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars, text_objs, fade_start, fade_duration),
     frames=total_frames,
     interval=1000 / 30,
     blit=True
@@ -216,25 +216,33 @@ def create_audio_visualizer(
   fig, ax = setup_figure(video_size, bg_color)
   draw_background(ax, video_size, bg_image_path, bg_image_type)
 
-  # タイトル・サブタイトル・詳細文を描画（draw_text にてフェードイン処理を実施）
-  text_obj = None
-  text_lines = []
+  # タイトル、サブタイトル、詳細文はそれぞれ個別に描画
+  text_objs = []
   if title:
-    text_lines.append(title)
+    title_obj = draw_text(ax, video_size, title, font_name="BIZ UDGothic", init_alpha=0)
+    title_obj.set_fontsize(20)  # タイトルの文字サイズ
+    title_obj.set_bbox(dict(facecolor="darkblue", alpha=0.5))  # タイトルの背景色
+    title_obj.set_position((10, video_size[1] - 10))
+    text_objs.append(title_obj)
   if subtitle:
-    text_lines.append(subtitle)
+    subtitle_obj = draw_text(ax, video_size, subtitle, font_name="BIZ UDGothic", init_alpha=0)
+    subtitle_obj.set_fontsize(16)  # サブタイトルの文字サイズ
+    subtitle_obj.set_bbox(dict(facecolor="darkgreen", alpha=0.5))
+    subtitle_obj.set_position((10, video_size[1] - 40))
+    text_objs.append(subtitle_obj)
   if summary:
-    text_lines.append(summary)
-  if text_lines:
-    text = "\n".join(text_lines)
-    text_obj = draw_text(ax, video_size, text)  # フォント名は必要に応じて第4引数で指定可能
+    summary_obj = draw_text(ax, video_size, summary, font_name="BIZ UDGothic", init_alpha=0)
+    summary_obj.set_fontsize(14)  # 詳細文の文字サイズ
+    summary_obj.set_bbox(dict(facecolor="darkred", alpha=0.5))
+    summary_obj.set_position((10, video_size[1] - 70))
+    text_objs.append(summary_obj)
 
   # ビジュアライザーの準備
   n_bars = 50
   bars = setup_visualizer(ax, video_size, viz_size, viz_color, n_bars)
 
-  # アニメーション生成（テキストオブジェクトがあればフェードインも更新）
-  anim = create_animation(fig, y, sr, duration, bars, viz_size, video_size, n_bars, text_obj, fade_start=2, fade_duration=1)
+  # アニメーション生成（テキストオブジェクト群があればフェードインも更新）
+  anim = create_animation(fig, y, sr, duration, bars, viz_size, video_size, n_bars, text_objs, fade_start=2, fade_duration=1)
 
   # テンポラリ動画ファイルに保存
   with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_video:
