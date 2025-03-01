@@ -108,8 +108,23 @@ def setup_visualizer(ax, video_size, viz_size, viz_color, n_bars=50):
   )
   return bars
 
-def update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars=50):
-  """アニメーション更新用のコールバック関数"""
+def draw_text(ax, video_size, text, font_name="BIZ UDGothic"):
+  """テキストを描画する関数。初期は非表示（alpha=0）。
+     フォント名は font_name で指定可能。
+  """
+  txt = ax.text(
+    10, video_size[1] - 10, text,
+    color="white",
+    fontsize=16,
+    verticalalignment="top",
+    alpha=0,
+    fontname=font_name,
+    bbox=dict(facecolor="black", alpha=0.5)
+  )
+  return txt
+
+def update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars=50, text_obj=None, fade_start=2, fade_duration=1):
+  """アニメーション更新用のコールバック関数。バーの更新に加え、指定があればテキストのフェードインも行う"""
   time = (frame / 30) % duration
   start_idx = int(time * sr)
   end_idx = start_idx + sr // 30
@@ -130,14 +145,22 @@ def update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars=50):
     for bar, val in zip(bars, new_heights):
       bar.set_height(val)
 
+  if text_obj is not None:
+    # フェードイン開始時間 (秒) より前は非表示、以降は徐々に alpha を上げる
+    if time >= fade_start:
+      alpha = min((time - fade_start) / fade_duration, 1.0)
+    else:
+      alpha = 0
+    text_obj.set_alpha(alpha)
+    return bars + (text_obj,)
   return bars
 
-def create_animation(fig, y, sr, duration, bars, viz_size, video_size, n_bars=50):
-  """FuncAnimationによるアニメーションの作成"""
+def create_animation(fig, y, sr, duration, bars, viz_size, video_size, n_bars=50, text_obj=None, fade_start=2, fade_duration=1):
+  """FuncAnimation によるアニメーションの作成。テキストオブジェクトがあればフェードインも更新する"""
   total_frames = int(duration * 30)
   anim = FuncAnimation(
     fig,
-    lambda frame: update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars),
+    lambda frame: update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars, text_obj, fade_start, fade_duration),
     frames=total_frames,
     interval=1000 / 30,
     blit=True
@@ -193,7 +216,8 @@ def create_audio_visualizer(
   fig, ax = setup_figure(video_size, bg_color)
   draw_background(ax, video_size, bg_image_path, bg_image_type)
 
-  # タイトル・サブタイトル・詳細文を動画左上に描画
+  # タイトル・サブタイトル・詳細文を描画（draw_text にてフェードイン処理を実施）
+  text_obj = None
   text_lines = []
   if title:
     text_lines.append(title)
@@ -203,20 +227,14 @@ def create_audio_visualizer(
     text_lines.append(summary)
   if text_lines:
     text = "\n".join(text_lines)
-    ax.text(
-      10, video_size[1] - 10, text,
-      color="white",
-      fontsize=16,
-      verticalalignment="top",
-      bbox=dict(facecolor="black", alpha=0.5)
-    )
+    text_obj = draw_text(ax, video_size, text)  # フォント名は必要に応じて第4引数で指定可能
 
   # ビジュアライザーの準備
   n_bars = 50
   bars = setup_visualizer(ax, video_size, viz_size, viz_color, n_bars)
 
-  # アニメーション生成
-  anim = create_animation(fig, y, sr, duration, bars, viz_size, video_size, n_bars)
+  # アニメーション生成（テキストオブジェクトがあればフェードインも更新）
+  anim = create_animation(fig, y, sr, duration, bars, viz_size, video_size, n_bars, text_obj, fade_start=2, fade_duration=1)
 
   # テンポラリ動画ファイルに保存
   with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_video:
