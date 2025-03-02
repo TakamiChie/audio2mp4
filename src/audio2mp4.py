@@ -1,4 +1,8 @@
 import argparse
+from matplotlib.artist import Artist
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+from matplotlib.patches import Rectangle
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -13,8 +17,14 @@ from PIL import Image, ImageOps
 import soundfile as sf
 from mutagen import File as MutagenFile  # 追加: mutagenでID3タグ読み込み
 
-def create_fade_mask(duration_seconds, sr=44100, fade_duration=2):
-  """フェードアウトマスクを作成する関数"""
+def create_fade_mask(duration_seconds: int, sr: int=44100, fade_duration: int=2) -> np.ndarray:
+  """
+  フェードアウトマスクを作成する関数
+
+  duration_seconds: 音声の長さ（秒）
+  sr: サンプリングレート
+  fade_duration: フェードアウトの長さ（秒）
+  """
   total_samples = int(duration_seconds * sr)
   fade_samples = int(fade_duration * sr)
   mask = np.ones(total_samples)
@@ -23,8 +33,14 @@ def create_fade_mask(duration_seconds, sr=44100, fade_duration=2):
   mask[fade_start:] = fade_curve
   return mask
 
-def prepare_audio(mp3_path, loop_count, effect):
-  """音声の読み込み、ループやフェードエフェクトの適用、及びテンポラリ音声ファイルの作成"""
+def prepare_audio(mp3_path: str, loop_count: int, effect: str) -> tuple[np.ndarray, int, float, str]:
+  """
+  音声の読み込み、ループやフェードエフェクトの適用、及びテンポラリ音声ファイルの作成
+
+  mp3_path: 入力MP3ファイルのパス
+  loop_count: 音声のループ回数
+  effect: フェードアウトエフェクトの指定（現時点では"fade"のみ）
+  """
   y, sr = librosa.load(mp3_path)
   single_duration = librosa.get_duration(y=y, sr=sr)
 
@@ -48,8 +64,13 @@ def prepare_audio(mp3_path, loop_count, effect):
 
   return y, sr, duration, temp_audio_path
 
-def setup_figure(video_size, bg_color):
-  """図と軸のセットアップを行う"""
+def setup_figure(video_size: tuple[int, int], bg_color: str) -> tuple[Figure, Axes]:
+  """
+  図と軸のセットアップを行う
+
+  video_size: 動画のサイズ
+  bg_color: 背景色
+  """
   fig, ax = plt.subplots(figsize=(video_size[0]/100, video_size[1]/100), facecolor=bg_color)
   ax.set_facecolor(bg_color)
   ax.set_xlim(0, video_size[0])
@@ -58,8 +79,15 @@ def setup_figure(video_size, bg_color):
   ax.set_yticks([])
   return fig, ax
 
-def draw_background(ax, video_size, bg_image_path, bg_image_type):
-  """背景画像が指定されていれば描画する"""
+def draw_background(ax: Axes, video_size: tuple[int, int], bg_image_path: str, bg_image_type: str) -> None:
+  """
+  背景画像が指定されていれば描画する
+
+  ax: 軸オブジェクト
+  video_size: 動画のサイズ
+  bg_image_path: 背景画像のパス
+  bg_image_type: 背景画像の描画方法（streach, center, tile）
+  """
   if bg_image_path:
     img = Image.open(bg_image_path)
     if bg_image_type == "streach":
@@ -88,8 +116,16 @@ def draw_background(ax, video_size, bg_image_path, bg_image_type):
           new_img.paste(img, (i, j))
       ax.imshow(new_img, extent=[0, video_size[0], 0, video_size[1]])
 
-def setup_visualizer(ax, video_size, viz_size, viz_color, n_bars=50):
-  """ビジュアライザーのバーを作成する"""
+def setup_visualizer(ax: Axes, video_size: tuple[int, int], viz_size: tuple[int, int], viz_color: str, n_bars: int=50) -> list[plt.Rectangle]:
+  """
+  ビジュアライザーのバーを作成する
+
+  ax: 軸オブジェクト
+  video_size: 動画のサイズ
+  viz_size: ビジュアライザーのサイズ
+  viz_color: ビジュアライザーの色
+  n_bars: バーの本数
+  """
   viz_left = (video_size[0] - viz_size[0]) / 2
   viz_bottom = (video_size[1] - viz_size[1]) / 2
 
@@ -108,8 +144,19 @@ def setup_visualizer(ax, video_size, viz_size, viz_color, n_bars=50):
   )
   return bars
 
-def draw_texts(fig, ax, video_size, texts, init_alpha=0):
-  """テキストを描画する。タイトル、サブタイトル、詳細文をそれぞれ描画する"""
+def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[str, str], init_alpha: float=0) -> list[plt.Text]:
+  """
+  テキストを描画する。タイトル、サブタイトル、詳細文をそれぞれ描画する
+
+  fig: 図オブジェクト
+  ax: 軸オブジェクト
+  video_size: 動画のサイズ
+  texts: タイトル、サブタイトル、詳細文のテキストを格納した辞書
+    title: タイトルのテキスト
+    subtitle: サブタイトルのテキスト
+    summary: 詳細文のテキスト
+  init_alpha: テキストの初期透明度（デフォルトは0/テスト時などは1を設定）
+  """
   text_objs = []
   position = 0
   def add_text(text, fontsize=16, bgcolor="darkblue", bgalpha=0.5):
@@ -131,9 +178,15 @@ def draw_texts(fig, ax, video_size, texts, init_alpha=0):
     text_objs.append(add_text(texts["title"], 20, "darkblue", 0.5))
   return text_objs
 
-def draw_text(ax, video_size, text, font_name="BIZ UDGothic", init_alpha=0):
-  """テキストを描画する関数。初期の透明度は init_alpha で指定可能。
-     テスト時に初期表示させたい場合は init_alpha を 1 など適宜指定してください。
+def draw_text(ax: Axes, video_size: tuple[int, int], text: str, font_name: str="BIZ UDGothic", init_alpha:float=0) -> plt.Text:
+  """
+  テキストを描画する関数。
+
+  ax: 軸オブジェクト
+  video_size: 動画のサイズ
+  text: 描画するテキスト
+  font_name: フォント名（デフォルトは BIZ UDGothic）
+  init_alpha: テキストの初期透明度（デフォルトは0/テスト時などは1を設定）
   """
   txt = ax.text(
     10, video_size[1] - 10, text,
@@ -146,8 +199,24 @@ def draw_text(ax, video_size, text, font_name="BIZ UDGothic", init_alpha=0):
   )
   return txt
 
-def update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars=50, text_objs=None, fade_start=2, fade_duration=1):
-  """アニメーション更新用のコールバック関数。バーの更新に加え、指定があればテキストのフェードインも行う"""
+def update_frame(frame: Artist, y: np.ndarray, sr: int, duration: int, bars: list[Rectangle],
+                 viz_size: tuple[int, int], video_size: tuple[int, int], n_bars: int=50,
+                 text_objs:list[plt.Text]=None, fade_start: int=2, fade_duration: int=1) -> tuple[Rectangle]:
+  """
+  アニメーション更新用のコールバック関数。バーの更新に加え、指定があればテキストのフェードインも行う
+
+  frame: 現在のフレーム
+  y: 音声データ
+  sr: サンプリングレート
+  duration: 音声の長さ（秒）
+  bars: バーのリスト
+  viz_size: ビジュアライザーのサイズ
+  video_size: 動画のサイズ
+  n_bars: バーの本数
+  text_objs: テキストオブジェクトのリスト
+  fade_start: フェードイン開始時間
+  fade_duration: フェードイン時間
+  """
   time = (frame / 30) % duration
   start_idx = int(time * sr)
   end_idx = start_idx + sr // 30
@@ -178,8 +247,24 @@ def update_frame(frame, y, sr, duration, bars, viz_size, video_size, n_bars=50, 
     return bars + tuple(text_objs)
   return bars
 
-def create_animation(fig, y, sr, duration, bars, viz_size, video_size, n_bars=50, text_objs=None, fade_start=2, fade_duration=1):
-  """FuncAnimation によるアニメーションの作成。テキストオブジェクト群があればフェードインも更新する"""
+def create_animation(fig: Figure, y: np.ndarray, sr: int, duration: int, bars: list[Rectangle],
+                     viz_size: tuple[int, int], video_size: tuple[int,int], n_bars: int=50,
+                     text_objs: list[plt.Text]=None, fade_start: int=2, fade_duration: int=1) -> FuncAnimation:
+  """
+  FuncAnimation によるアニメーションの作成。テキストオブジェクト群があればフェードインも更新する
+
+  fig: 図オブジェクト
+  y: 音声データ
+  sr: サンプリングレート
+  duration: 音声の長さ（秒）
+  bars: バーのリスト
+  viz_size: ビジュアライザーのサイズ
+  video_size: 動画のサイズ
+  n_bars: バーの本数
+  text_objs: テキストオブジェクトのリスト
+  fade_start: フェードイン開始時間
+  fade_duration: フェードイン時間
+  """
   total_frames = int(duration * 30)
   anim = FuncAnimation(
     fig,
@@ -190,8 +275,14 @@ def create_animation(fig, y, sr, duration, bars, viz_size, video_size, n_bars=50
   )
   return anim
 
-def combine_video_audio(temp_video_path, temp_audio_path, output_path):
-  """動画と音声を合成して最終動画を出力する"""
+def combine_video_audio(temp_video_path: str, temp_audio_path: str, output_path: str) -> None:
+  """
+  動画と音声を合成して最終動画を出力する
+
+  temp_video_path: テンポラリ動画ファイルのパス
+  temp_audio_path: テンポラリ音声ファイルのパス
+  output_path: 出力動画ファイルのパス
+  """
   video = VideoFileClip(temp_video_path)
   audio = AudioFileClip(temp_audio_path)
   final_video = video.with_audio(audio)
@@ -209,20 +300,37 @@ def combine_video_audio(temp_video_path, temp_audio_path, output_path):
   final_video.close()
 
 def create_audio_visualizer(
-  mp3_path,
-  output_path="audio.mp4",
-  video_size=(1280, 720),
-  viz_size=(1080, 520),
-  bg_color="black",
-  viz_color="gradation",
-  loop_count=1,
-  bg_image_path=None,
-  bg_image_type="streach",
-  effect="",
-  title=None,
-  subtitle=None,
-  summary=None
-):
+  mp3_path: str,
+  output_path: str="audio.mp4",
+  video_size: tuple[int, int]=(1280, 720),
+  viz_size: tuple[int, int]=(1080, 520),
+  bg_color: str="black",
+  viz_color: str="gradation",
+  loop_count: int=1,
+  bg_image_path: str=None,
+  bg_image_type: str="streach",
+  effect: str="",
+  title: str=None,
+  subtitle: str=None,
+  summary: str=None
+) -> None:
+  """
+  Main
+
+  mp3_path: 入力MP3ファイルのパス
+  output_path: 出力動画ファイルのパス
+  video_size: 動画のサイズ
+  viz_size: ビジュアライザーのサイズ
+  bg_color: 背景色
+  viz_color: ビジュアライザーの色
+  loop_count: 音声のループ回数
+  bg_image_path: 背景画像のパス
+  bg_image_type: 背景画像の描画方法（streach, center, tile）
+  effect: フェードアウトエフェクトの指定（現時点では"fade"のみ）
+  title: タイトルテキスト
+  subtitle: サブタイトルテキスト
+  summary: 詳細文テキスト
+  """
   # ID3タグから情報取得（省略時）
   audiofile = MutagenFile(mp3_path, easy=True)
   if title is None and 'album' in audiofile:
@@ -240,7 +348,11 @@ def create_audio_visualizer(
   draw_background(ax, video_size, bg_image_path, bg_image_type)
 
   # タイトル、サブタイトル、詳細文はそれぞれ個別に描画
-  text_objs = draw_texts(fig, ax, video_size, {"title": title, "subtitle": subtitle, "summary": summary});
+  text_objs = draw_texts(fig, ax, video_size, {
+    "title": title,
+    "subtitle": subtitle,
+    "summary": summary
+    })
 
   # ビジュアライザーの準備
   n_bars = 50
