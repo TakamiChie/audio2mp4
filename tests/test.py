@@ -191,6 +191,8 @@ class TestAudio2MP4(unittest.TestCase):
     # 図と軸の作成（背景は黒に設定）
     fig, ax = plt.subplots(figsize=(video_size[0]/100, video_size[1]/100))
     ax.set_facecolor("black")
+    ax.set_xlim(0, video_size[0])
+    ax.set_ylim(0, video_size[1])
 
     # テスト用のテキスト辞書（キー：summary, subtitle, title）
     texts = {
