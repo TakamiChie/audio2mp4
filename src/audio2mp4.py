@@ -108,6 +108,29 @@ def setup_visualizer(ax, video_size, viz_size, viz_color, n_bars=50):
   )
   return bars
 
+def draw_texts(fig, ax, video_size, texts):
+  """テキストを描画する。タイトル、サブタイトル、詳細文をそれぞれ描画する"""
+  text_objs = []
+  position = 0
+  def add_text(text, fontsize=16, bgcolor="darkblue", bgalpha=0.5):
+    nonlocal position
+    text = draw_text(ax, video_size, text)
+    text.set_fontsize(fontsize)  # タイトルの文字サイズ
+    text.set_bbox(dict(facecolor=bgcolor, alpha=bgalpha))  # タイトルの背景色
+    text.set_position((10, position + video_size[1] - 30))
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    position += text.get_window_extent(renderer).height + 30
+    return text
+
+  if "summary" in texts:
+    text_objs.append(add_text(texts["summary"], 14, "darkred", 0.5))
+  if "subtitle" in texts:
+    text_objs.append(add_text(texts["subtitle"], 16, "darkgreen", 0.5))
+  if "title" in texts:
+    text_objs.append(add_text(texts["title"], 20, "darkblue", 0.5))
+  return text_objs
+
 def draw_text(ax, video_size, text, font_name="BIZ UDGothic", init_alpha=0):
   """テキストを描画する関数。初期の透明度は init_alpha で指定可能。
      テスト時に初期表示させたい場合は init_alpha を 1 など適宜指定してください。
@@ -217,25 +240,7 @@ def create_audio_visualizer(
   draw_background(ax, video_size, bg_image_path, bg_image_type)
 
   # タイトル、サブタイトル、詳細文はそれぞれ個別に描画
-  text_objs = []
-  if title:
-    title_obj = draw_text(ax, video_size, title, font_name="BIZ UDGothic", init_alpha=0)
-    title_obj.set_fontsize(20)  # タイトルの文字サイズ
-    title_obj.set_bbox(dict(facecolor="darkblue", alpha=0.5))  # タイトルの背景色
-    title_obj.set_position((10, video_size[1] - 10))
-    text_objs.append(title_obj)
-  if subtitle:
-    subtitle_obj = draw_text(ax, video_size, subtitle, font_name="BIZ UDGothic", init_alpha=0)
-    subtitle_obj.set_fontsize(16)  # サブタイトルの文字サイズ
-    subtitle_obj.set_bbox(dict(facecolor="darkgreen", alpha=0.5))
-    subtitle_obj.set_position((10, video_size[1] - 40))
-    text_objs.append(subtitle_obj)
-  if summary:
-    summary_obj = draw_text(ax, video_size, summary, font_name="BIZ UDGothic", init_alpha=0)
-    summary_obj.set_fontsize(14)  # 詳細文の文字サイズ
-    summary_obj.set_bbox(dict(facecolor="darkred", alpha=0.5))
-    summary_obj.set_position((10, video_size[1] - 70))
-    text_objs.append(summary_obj)
+  text_objs = draw_texts(fig, ax, video_size, {"title": title, "subtitle": subtitle, "summary": summary});
 
   # ビジュアライザーの準備
   n_bars = 50
