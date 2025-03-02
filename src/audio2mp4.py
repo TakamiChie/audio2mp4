@@ -108,13 +108,13 @@ def setup_visualizer(ax, video_size, viz_size, viz_color, n_bars=50):
   )
   return bars
 
-def draw_texts(fig, ax, video_size, texts):
+def draw_texts(fig, ax, video_size, texts, init_alpha=0):
   """テキストを描画する。タイトル、サブタイトル、詳細文をそれぞれ描画する"""
   text_objs = []
   position = 0
   def add_text(text, fontsize=16, bgcolor="darkblue", bgalpha=0.5):
     nonlocal position
-    text = draw_text(ax, video_size, text)
+    text = draw_text(ax, video_size, text, init_alpha=init_alpha)
     text.set_fontsize(fontsize)  # タイトルの文字サイズ
     text.set_bbox(dict(facecolor=bgcolor, alpha=bgalpha))  # タイトルの背景色
     text.set_position((10, position + video_size[1] - 30))

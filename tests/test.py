@@ -182,5 +182,43 @@ class TestAudio2MP4(unittest.TestCase):
 
     plt.close(fig)
 
+  def test_draw_texts(self):
+    import matplotlib.pyplot as plt
+    from pathlib import Path
+    from src.audio2mp4 import draw_texts
+
+    video_size = (640, 480)
+    # 図と軸の作成（背景は黒に設定）
+    fig, ax = plt.subplots(figsize=(video_size[0]/100, video_size[1]/100))
+    ax.set_facecolor("black")
+
+    # テスト用のテキスト辞書（キー：summary, subtitle, title）
+    texts = {
+      "title": "タイトルテスト",
+      "subtitle": "サブタイトルテスト",
+      "summary": "概要テスト"
+    }
+
+    # draw_texts 呼び出し
+    text_objs = draw_texts(fig, ax, video_size, texts, init_alpha=1)
+
+    # キーは summary, subtitle, title の順で描画されるので、リストの順序がそれに一致することを確認
+    self.assertEqual(len(text_objs), 3)
+    self.assertEqual(text_objs[0].get_text(), "概要テスト")
+    self.assertEqual(text_objs[1].get_text(), "サブタイトルテスト")
+    self.assertEqual(text_objs[2].get_text(), "タイトルテスト")
+
+    # フォントサイズの検証
+    self.assertEqual(text_objs[0].get_fontsize(), 14)
+    self.assertEqual(text_objs[1].get_fontsize(), 16)
+    self.assertEqual(text_objs[2].get_fontsize(), 20)
+
+    # テスト結果画像を tests/out に保存（削除はしない）
+    out_dir = Path(__file__).parent / "out"
+    out_dir.mkdir(exist_ok=True)
+    save_path = out_dir / "draw_texts_test.png"
+    fig.savefig(str(save_path))
+    plt.close(fig)
+
 if __name__ == '__main__':
   unittest.main()
