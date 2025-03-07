@@ -159,11 +159,11 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
   """
   text_objs = []
   position = 0
-  def add_text(text, fontsize=16, bgcolor="darkblue", bgalpha=0.5):
+  def add_text(text, fontsize=16, bgcolor="darkblue", edgecolor="black", bgalpha=0.5):
     nonlocal position
     text = draw_text(ax, video_size, text, init_alpha=init_alpha)
     text.set_fontsize(fontsize)  # タイトルの文字サイズ
-    text.set_bbox(dict(facecolor=bgcolor, alpha=bgalpha))  # タイトルの背景色
+    text.set_bbox(dict(facecolor=bgcolor, edgecolor=edgecolor, alpha=bgalpha))  # タイトルの背景色
     text.set_position((10, position + video_size[1] - 30))
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
@@ -171,11 +171,11 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
     return text
 
   if "summary" in texts:
-    text_objs.append(add_text(texts["summary"], 14, "darkred", 0.5))
+    text_objs.append(add_text(texts["summary"], 14, "darkred", "white", 0.5))
   if "subtitle" in texts:
-    text_objs.append(add_text(texts["subtitle"], 16, "darkgreen", 0.5))
+    text_objs.append(add_text(texts["subtitle"], 16, "darkgreen", "black", 0.5))
   if "title" in texts:
-    text_objs.append(add_text(texts["title"], 20, "darkblue", 0.5))
+    text_objs.append(add_text(texts["title"], 20, "darkblue", "black", 0.5))
   return text_objs
 
 def draw_text(ax: Axes, video_size: tuple[int, int], text: str, font_name: str="BIZ UDGothic", init_alpha:float=0) -> plt.Text:
