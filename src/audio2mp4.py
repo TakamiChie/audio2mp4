@@ -144,7 +144,7 @@ def setup_visualizer(ax: Axes, video_size: tuple[int, int], viz_size: tuple[int,
   )
   return bars
 
-def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[str, str], init_alpha: float=0, fade_base: float=2.0) -> list[plt.Text]:
+def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[str, dict[str, str]], init_alpha: float=0, fade_base: float=2.0) -> list[plt.Text]:
   """
   テキストを描画する。タイトル、サブタイトル、詳細文をそれぞれ描画する
   表示開始は、タイトル: fade_base, サブタイトル: fade_base + 0.1, 詳細文: fade_base + 0.2
@@ -173,16 +173,23 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
     return t_obj
 
   # 上から順に: title, subtitle, summary
+  print(texts)
   if "summary" in texts:
-    t_obj = add_text(texts["summary"], 14, "darkred", "white", 0.5)
+    t_obj = add_text(texts["summary"]["text"], 14,
+                     texts['summary']["bgcolor"],
+                     texts['summary']["edgecolor"], 0.5)
     t_obj.fade_start = fade_base + 0.4    # 詳細文は+0.4秒後
     text_objs.append(t_obj)
   if "subtitle" in texts:
-    t_obj = add_text(texts["subtitle"], 16, "darkgreen", "black", 0.5)
+    t_obj = add_text(texts["subtitle"]["text"], 16,
+                     texts['subtitle']["bgcolor"],
+                     texts['subtitle']["edgecolor"], 0.5)
     t_obj.fade_start = fade_base + 0.2    # サブタイトルは+0.2秒後
     text_objs.append(t_obj)
   if "title" in texts:
-    t_obj = add_text(texts["title"], 20, "darkblue", "black", 0.5)
+    t_obj = add_text(texts["title"]["text"], 20,
+                     texts['title']["bgcolor"],
+                     texts['title']["edgecolor"], 0.5)
     t_obj.fade_start = fade_base        # タイトルは基準時刻
     text_objs.append(t_obj)
   return text_objs
@@ -321,8 +328,14 @@ def create_audio_visualizer(
   bg_image_type: str="streach",
   effect: str="",
   title: str=None,
+  title_bg_color: str="darkblue",
+  title_edge_color: str="black",
   subtitle: str=None,
-  summary: str=None
+  subtitle_bg_color: str="darkgreen",
+  subtitle_edge_color: str="black",
+  summary: str=None,
+  summary_bg_color: str="darkred",
+  summary_edge_color: str="black"
 ) -> None:
   """
   Main
@@ -338,8 +351,14 @@ def create_audio_visualizer(
   bg_image_type: 背景画像の描画方法（streach, center, tile）
   effect: フェードアウトエフェクトの指定（現時点では"fade"のみ）
   title: タイトルテキスト
+  title_bg_color: タイトル背景色
+  title_edge_color: タイトル枠線色
   subtitle: サブタイトルテキスト
+  subtitle_bg_color: サブタイトル背景色
+  subtitle_edge_color: サブタイトル枠線色
   summary: 詳細文テキスト
+  summary_bg_color: 詳細文背景色
+  summary_edge_color: 詳細文枠線色
   """
   # ID3タグから情報取得（省略時）
   audiofile = MutagenFile(mp3_path, easy=True)
@@ -358,10 +377,23 @@ def create_audio_visualizer(
   draw_background(ax, video_size, bg_image_path, bg_image_type)
 
   # タイトル、サブタイトル、詳細文はそれぞれ個別に描画
-  text_objs = draw_texts(fig, ax, video_size, {
-    "title": title,
-    "subtitle": subtitle,
-    "summary": summary
+  text_objs = draw_texts(fig, ax, video_size,
+    {
+      "title": {
+        "text": title,
+        "bgcolor": title_bg_color,
+        "edgecolor": title_edge_color
+      },
+      "subtitle": {
+        "text": subtitle,
+        "bgcolor": subtitle_bg_color,
+        "edgecolor": subtitle_edge_color
+      },
+      "summary": {
+        "text": summary,
+        "bgcolor": summary_bg_color,
+        "edgecolor": summary_edge_color
+      }
     })
 
   # ビジュアライザーの準備
@@ -398,8 +430,14 @@ def main():
   parser.add_argument('--bg-image-type', default='streach', help='Background image type (streach, center, tile)')
   parser.add_argument('--effect', default='', help='Audio effect (use "fade" for fade-out effect)')
   parser.add_argument('--title', help='Title text to display (default: ID3 album name)')
+  parser.add_argument('--title-bg-color', default='darkblue', help='Title background color')
+  parser.add_argument('--title-edge-color', default='black', help='Title edge color')
   parser.add_argument('--subtitle', help='Subtitle text to display (default: ID3 title)')
+  parser.add_argument('--subtitle-bg-color', default='darkgreen', help='Subtitle background color')
+  parser.add_argument('--subtitle-edge-color', default='black', help='Subtitle edge color')
   parser.add_argument('--summary', help='Summary text to display (default: first line of ID3 comment)')
+  parser.add_argument('--summary-bg-color', default='darkred', help='Summary background color')
+  parser.add_argument('--summary-edge-color', default='black', help='Summary edge color')
 
   args = parser.parse_args()
 
@@ -415,8 +453,14 @@ def main():
     args.bg_image_type,
     args.effect,
     args.title,
+    args.title_bg_color,
+    args.title_edge_color,
     args.subtitle,
-    args.summary
+    args.subtitle_bg_color,
+    args.subtitle_edge_color,
+    args.summary,
+    args.summary_bg_color,
+    args.summary_edge_color
   )
 
 if __name__ == '__main__':
