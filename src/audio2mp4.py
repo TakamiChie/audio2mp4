@@ -144,9 +144,10 @@ def setup_visualizer(ax: Axes, video_size: tuple[int, int], viz_size: tuple[int,
   )
   return bars
 
-def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[str, str], init_alpha: float=0) -> list[plt.Text]:
+def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[str, str], init_alpha: float=0, fade_base: float=2.0) -> list[plt.Text]:
   """
   テキストを描画する。タイトル、サブタイトル、詳細文をそれぞれ描画する
+  表示開始は、タイトル: fade_base, サブタイトル: fade_base + 0.1, 詳細文: fade_base + 0.2
 
   fig: 図オブジェクト
   ax: 軸オブジェクト
@@ -156,26 +157,34 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
     subtitle: サブタイトルのテキスト
     summary: 詳細文のテキスト
   init_alpha: テキストの初期透明度（デフォルトは0/テスト時などは1を設定）
+  fade_base: フェードイン開始時間（デフォルトは2.0秒）
   """
   text_objs = []
   position = 0
   def add_text(text, fontsize=16, bgcolor="darkblue", edgecolor="black", bgalpha=0.5):
     nonlocal position
-    text = draw_text(ax, video_size, text, init_alpha=init_alpha)
-    text.set_fontsize(fontsize)  # タイトルの文字サイズ
-    text.set_bbox(dict(facecolor=bgcolor, edgecolor=edgecolor, alpha=bgalpha))  # タイトルの背景色
-    text.set_position((10, position + video_size[1] - 30))
+    t_obj = draw_text(ax, video_size, text, init_alpha=init_alpha)
+    t_obj.set_fontsize(fontsize)
+    t_obj.set_bbox(dict(facecolor=bgcolor, edgecolor=edgecolor, alpha=bgalpha))
+    t_obj.set_position((10, position + video_size[1] - 30))
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
-    position += text.get_window_extent(renderer).height + 30
-    return text
+    position += t_obj.get_window_extent(renderer).height + 30
+    return t_obj
 
+  # 上から順に: title, subtitle, summary
   if "summary" in texts:
-    text_objs.append(add_text(texts["summary"], 14, "darkred", "white", 0.5))
+    t_obj = add_text(texts["summary"], 14, "darkred", "white", 0.5)
+    t_obj.fade_start = fade_base + 0.4    # 詳細文は+0.4秒後
+    text_objs.append(t_obj)
   if "subtitle" in texts:
-    text_objs.append(add_text(texts["subtitle"], 16, "darkgreen", "black", 0.5))
+    t_obj = add_text(texts["subtitle"], 16, "darkgreen", "black", 0.5)
+    t_obj.fade_start = fade_base + 0.2    # サブタイトルは+0.2秒後
+    text_objs.append(t_obj)
   if "title" in texts:
-    text_objs.append(add_text(texts["title"], 20, "darkblue", "black", 0.5))
+    t_obj = add_text(texts["title"], 20, "darkblue", "black", 0.5)
+    t_obj.fade_start = fade_base        # タイトルは基準時刻
+    text_objs.append(t_obj)
   return text_objs
 
 def draw_text(ax: Axes, video_size: tuple[int, int], text: str, font_name: str="BIZ UDGothic", init_alpha:float=0) -> plt.Text:
@@ -204,6 +213,7 @@ def update_frame(frame: Artist, y: np.ndarray, sr: int, duration: int, bars: lis
                  text_objs:list[plt.Text]=None, fade_start: int=2, fade_duration: int=1) -> tuple[Rectangle]:
   """
   アニメーション更新用のコールバック関数。バーの更新に加え、指定があればテキストのフェードインも行う
+  各テキストオブジェクトは、fade_start属性がある場合はその値を用いる。
 
   frame: 現在のフレーム
   y: 音声データ
@@ -225,12 +235,10 @@ def update_frame(frame: Artist, y: np.ndarray, sr: int, duration: int, bars: lis
     chunk = y[start_idx:end_idx]
     fft = np.abs(np.fft.fft(chunk))
     fft = fft[:len(fft) // 2]
-
     fft_max = np.max(fft)
     if fft_max > 0:
       fft = fft / fft_max
     fft = fft * viz_size[1]
-
     new_heights = np.interp(np.linspace(0, len(fft), n_bars),
                             np.arange(len(fft)),
                             fft)
@@ -239,8 +247,10 @@ def update_frame(frame: Artist, y: np.ndarray, sr: int, duration: int, bars: lis
 
   if text_objs:
     for obj in text_objs:
-      if time >= fade_start:
-        alpha = min((time - fade_start) / fade_duration, 1.0)
+      # 各オブジェクトは属性fade_startが設定されていればその値を用いる（なければ共通のfade_startを使用）
+      obj_delay = getattr(obj, "fade_start", fade_start)
+      if time >= obj_delay:
+        alpha = min((time - obj_delay) / fade_duration, 1.0)
       else:
         alpha = 0
       obj.set_alpha(alpha)
