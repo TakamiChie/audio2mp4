@@ -73,10 +73,7 @@ def setup_figure(video_size: tuple[int, int], bg_color: str) -> tuple[Figure, Ax
   """
   fig, ax = plt.subplots(figsize=(video_size[0]/100, video_size[1]/100), facecolor=bg_color)
   ax.set_facecolor(bg_color)
-  ax.set_xlim(0, video_size[0])
-  ax.set_ylim(0, video_size[1])
-  ax.set_xticks([])
-  ax.set_yticks([])
+  ax.axis("off")
   return fig, ax
 
 def draw_background(ax: Axes, video_size: tuple[int, int], bg_image_path: str, bg_image_type: str) -> None:
