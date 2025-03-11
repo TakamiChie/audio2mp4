@@ -46,7 +46,9 @@ def draw_text_rect(
     ax.add_patch(rect)
     return rect
 
-def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[str, dict[str, str]], init_alpha: float=0, fade_base: float=2.0, textarea_bg_color:str=None) -> tuple[list[plt.Text], int]:
+def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[str, dict[str, str]],
+               text_left: int = 30, init_alpha: float=0, fade_base: float=2.0,
+               textarea_bg_color:str=None) -> tuple[list[plt.Text], int]:
   """
   テキストを描画する。タイトル、サブタイトル、詳細文をそれぞれ描画する
   表示開始は、タイトル: fade_base, サブタイトル: fade_base + 0.1, 詳細文: fade_base + 0.2
@@ -75,7 +77,7 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
     t_obj = draw_text(ax, video_size, text, init_alpha=init_alpha, text_color=text_color)
     t_obj.set_fontsize(fontsize)
     t_obj.set_bbox(dict(facecolor=bgcolor, edgecolor=edgecolor, alpha=bgalpha))
-    t_obj.set_position((30, video_size[1] - position - margin))
+    t_obj.set_position((text_left, video_size[1] - position - margin))
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     position += t_obj.get_window_extent(renderer).height + margin

@@ -342,7 +342,7 @@ def create_audio_visualizer(
         "edgecolor": summary_edge_color,
         "text_color": summary_text_color
       }
-    }, textarea_bg_color=textarea_bg_color
+    }, text_left=30, textarea_bg_color=textarea_bg_color
   )
 
   # ※ ここで textarea_bg_color や logo_image, logo_width, logo_height を使った処理を追加可能
