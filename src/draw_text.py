@@ -10,7 +10,7 @@ def draw_text_rect(
     video_size: tuple[int, int],
     height: int,
     bgcolor: str,
-    alpha: float = 0.5,
+    alpha: float = 1.0,
     edgecolor: str = "black",
     linewidth: float = 0.0
 ) -> Rectangle:
@@ -23,7 +23,7 @@ def draw_text_rect(
         video_size: 動画のサイズ (width, height)
         height: 矩形の高さ
         bgcolor: 矩形の色
-        alpha: 矩形の透明度 (デフォルト: 0.5)
+        alpha: 矩形の透明度 (デフォルト: 1.0)
         edgecolor: 矩形の枠線の色 (デフォルト: "black")
         linewidth: 矩形の枠線の太さ (デフォルト: 1.0)
 
@@ -34,7 +34,7 @@ def draw_text_rect(
     x = 0 # 左端から開始
     y = video_size[1] - height # 上端を基準に位置決め
     rect = Rectangle(
-        (9, y),
+        (x, y),
         width,
         height,
         facecolor=bgcolor,
@@ -65,28 +65,27 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
     tuple[list[plt.Text], int]: 描画されたテキストオブジェクトのリストと、最終的な垂直方向のポジション
   """
   text_objs = []
-  position = 0
-  text_height = 0
+  position = 5
+  margin = 35
   def add_text(text, fontsize=16, bgcolor="darkblue", edgecolor="black", bgalpha=0.5, text_color="white"):
     nonlocal position
-    nonlocal text_height
+    nonlocal margin
     t_obj = draw_text(ax, video_size, text, init_alpha=init_alpha, text_color=text_color)
     t_obj.set_fontsize(fontsize)
     t_obj.set_bbox(dict(facecolor=bgcolor, edgecolor=edgecolor, alpha=bgalpha))
-    t_obj.set_position((10, position + video_size[1] - 30))
+    t_obj.set_position((30, video_size[1] - position - margin))
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
-    text_height += t_obj.get_window_extent(renderer).height + 30
-    position += t_obj.get_window_extent(renderer).height + 30
+    position += t_obj.get_window_extent(renderer).height + margin
     return t_obj
 
   # 上から順に: title, subtitle, summary
-  if "summary" in texts:
-    t_obj = add_text(texts["summary"]["text"], 14,
-                     texts['summary']["bgcolor"],
-                     texts['summary']["edgecolor"], 0.5,
-                     texts['summary']["text_color"])
-    t_obj.fade_start = fade_base + 0.4    # 詳細文は+0.4秒後
+  if "title" in texts:
+    t_obj = add_text(texts["title"]["text"], 20,
+                     texts['title']["bgcolor"],
+                     texts['title']["edgecolor"], 0.5,
+                     texts['title']["text_color"])
+    t_obj.fade_start = fade_base        # タイトルは基準時刻
     text_objs.append(t_obj)
   if "subtitle" in texts:
     t_obj = add_text(texts["subtitle"]["text"], 16,
@@ -95,16 +94,16 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
                      texts['subtitle']["text_color"])
     t_obj.fade_start = fade_base + 0.2    # サブタイトルは+0.2秒後
     text_objs.append(t_obj)
-  if "title" in texts:
-    t_obj = add_text(texts["title"]["text"], 20,
-                     texts['title']["bgcolor"],
-                     texts['title']["edgecolor"], 0.5,
-                     texts['title']["text_color"])
-    t_obj.fade_start = fade_base        # タイトルは基準時刻
+  if "summary" in texts:
+    t_obj = add_text(texts["summary"]["text"], 14,
+                     texts['summary']["bgcolor"],
+                     texts['summary']["edgecolor"], 0.5,
+                     texts['summary']["text_color"])
+    t_obj.fade_start = fade_base + 0.4    # 詳細文は+0.4秒後
     text_objs.append(t_obj)
   if textarea_bg_color:
     # テキストエリアの背景を描画する
-    draw_text_rect(fig, ax, video_size, text_height, textarea_bg_color)
+    draw_text_rect(fig, ax, video_size, position + margin * 1.5, textarea_bg_color)
   return text_objs, position
 
 def draw_text(ax: Axes, video_size: tuple[int, int], text: str, font_name: str="BIZ UDGothic", init_alpha:float=0, text_color: str="white") -> plt.Text:
