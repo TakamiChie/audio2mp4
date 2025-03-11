@@ -320,7 +320,7 @@ def create_audio_visualizer(
 
   # テキストやロゴの表示（テキスト領域全体の背景色、ロゴ配置等の処理を必要に応じて追加可能）
   # ここではdraw_textsに渡すテキスト辞書に、新たな「text_color」を項目として追加しています。
-  text_objs = draw_texts(fig, ax, video_size,
+  text_objs, text_area_position = draw_texts(fig, ax, video_size,
     {
       "title": {
         "text": title,
@@ -345,6 +345,7 @@ def create_audio_visualizer(
 
   # ※ ここで textarea_bg_color や logo_image, logo_width, logo_height を使った処理を追加可能
   # 例： ax.imshow(logo_img) など
+  # text_area_position を使用して、次の描画位置を調整できます。
 
   # ビジュアライザーの準備
   n_bars = 50

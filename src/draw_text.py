@@ -1,9 +1,8 @@
-
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[str, dict[str, str]], init_alpha: float=0, fade_base: float=2.0) -> list[plt.Text]:
+def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[str, dict[str, str]], init_alpha: float=0, fade_base: float=2.0) -> tuple[list[plt.Text], int]:
   """
   テキストを描画する。タイトル、サブタイトル、詳細文をそれぞれ描画する
   表示開始は、タイトル: fade_base, サブタイトル: fade_base + 0.1, 詳細文: fade_base + 0.2
@@ -17,6 +16,8 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
     summary: 詳細文のテキスト
   init_alpha: テキストの初期透明度（デフォルトは0/テスト時などは1を設定）
   fade_base: フェードイン開始時間（デフォルトは2.0秒）
+  Returns:
+    tuple[list[plt.Text], int]: 描画されたテキストオブジェクトのリストと、最終的な垂直方向のポジション
   """
   text_objs = []
   position = 0
@@ -53,7 +54,7 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
                      texts['title']["text_color"])
     t_obj.fade_start = fade_base        # タイトルは基準時刻
     text_objs.append(t_obj)
-  return text_objs
+  return text_objs, position
 
 def draw_text(ax: Axes, video_size: tuple[int, int], text: str, font_name: str="BIZ UDGothic", init_alpha:float=0, text_color: str="white") -> plt.Text:
   """

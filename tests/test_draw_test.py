@@ -61,13 +61,28 @@ class TestAudio2MP4(unittest.TestCase):
 
     # テスト用のテキスト辞書（キー：summary, subtitle, title）
     texts = {
-      "title": "タイトルテスト",
-      "subtitle": "サブタイトルテスト",
-      "summary": "概要テスト"
+      "title": {
+          "text": "タイトルテスト",
+          "bgcolor":"darkblue",
+          "edgecolor":"black",
+          "text_color":"white"
+      },
+      "subtitle": {
+          "text": "サブタイトルテスト",
+          "bgcolor":"darkgreen",
+          "edgecolor":"black",
+          "text_color":"white"
+      },
+      "summary": {
+          "text": "概要テスト",
+          "bgcolor":"darkred",
+          "edgecolor":"black",
+          "text_color":"white"
+      }
     }
 
     # draw_texts 呼び出し
-    text_objs = draw_texts(fig, ax, video_size, texts, init_alpha=1)
+    text_objs, position = draw_texts(fig, ax, video_size, texts, init_alpha=1)
 
     # キーは summary, subtitle, title の順で描画されるので、リストの順序がそれに一致することを確認
     self.assertEqual(len(text_objs), 3)
@@ -79,6 +94,9 @@ class TestAudio2MP4(unittest.TestCase):
     self.assertEqual(text_objs[0].get_fontsize(), 14)
     self.assertEqual(text_objs[1].get_fontsize(), 16)
     self.assertEqual(text_objs[2].get_fontsize(), 20)
+
+    # 最終positionが0より大きいことを確認
+    self.assertGreater(position,0)
 
     # テスト結果画像を tests/out に保存（削除はしない）
     out_dir = Path(__file__).parent / "out"
