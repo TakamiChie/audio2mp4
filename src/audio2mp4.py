@@ -267,7 +267,7 @@ def create_audio_visualizer(
   summary_bg_color: str="darkred",
   summary_edge_color: str="black",
   summary_text_color: str="white",       # 新規追加：詳細文文字色
-  textarea_bg_color: str="white",        # 新規追加：テキストエリア全体の背景色
+  textarea_bg_color: str=None,           # 新規追加：テキストエリア全体の背景色
   logo_image: str=None,                  # 新規追加：ロゴ画像パス
   logo_width: int=0,                     # 新規追加：ロゴ画像幅
   logo_height: int=0                     # 新規追加：ロゴ画像高さ
@@ -340,7 +340,7 @@ def create_audio_visualizer(
         "edgecolor": summary_edge_color,
         "text_color": summary_text_color
       }
-    }
+    }, textarea_bg_color=textarea_bg_color
   )
 
   # ※ ここで textarea_bg_color や logo_image, logo_width, logo_height を使った処理を追加可能
@@ -394,7 +394,7 @@ def main():
   parser.add_argument('--summary-bg-color', default='darkred', help='Summary background color')
   parser.add_argument('--summary-edge-color', default='black', help='Summary edge color')
   parser.add_argument('--summary-text-color', default='white', help='Summary text color')  # 新規追加：詳細文文字色
-  parser.add_argument('--textarea-bg-color', default='white', help='Textarea background color')  # 新規追加：テキストエリア全体の背景色
+  parser.add_argument('--textarea-bg-color', default=None, help='Textarea background color')  # 新規追加：テキストエリア全体の背景色
   parser.add_argument('--logo-image', help='Path to logo image file')  # 新規追加：ロゴ画像パス
   parser.add_argument('--logo-width', type=int, default=0, help='Logo image width')  # 新規追加：ロゴ画像幅
   parser.add_argument('--logo-height', type=int, default=0, help='Logo image height')  # 新規追加：ロゴ画像高さ
