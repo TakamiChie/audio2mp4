@@ -1,0 +1,46 @@
+{
+  "video": {
+    "width": 1280,
+    "height": 720
+  },
+  "background": {
+    "color": "black",
+    "image": "path/to/bg.png",
+    "image_type": "center"
+  },
+  "vizualizer": {
+    "width": 1080,
+    "height": 520,
+    "color": "gradation"
+  },
+  "textarea": {
+    "background": {
+      "color": "white"
+    },
+    "logo": {
+      "image": "path/to/logo.png",
+      "width": 100,
+      "height": 100
+    },
+    "title": {
+      "text": "アルバム名",
+      "text_color": "white",
+      "bg_color": "darkblue",
+      "edge_color": "black"
+    },
+    "subtitle": {
+      "text": "曲名",
+      "text_color": "white",
+      "bg_color": "darkgreen",
+      "edge_color": "black"
+    },
+    "summary": {
+      "text": "コメント内容",
+      "text_color": "white",
+      "bg_color": "darkred",
+      "edge_color": "black"
+    }
+  },
+  "loop_count": 1,
+  "effect": "fade"
+}

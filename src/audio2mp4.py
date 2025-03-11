@@ -161,9 +161,9 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
   """
   text_objs = []
   position = 0
-  def add_text(text, fontsize=16, bgcolor="darkblue", edgecolor="black", bgalpha=0.5):
+  def add_text(text, fontsize=16, bgcolor="darkblue", edgecolor="black", bgalpha=0.5, text_color="white"):
     nonlocal position
-    t_obj = draw_text(ax, video_size, text, init_alpha=init_alpha)
+    t_obj = draw_text(ax, video_size, text, init_alpha=init_alpha, text_color=text_color)
     t_obj.set_fontsize(fontsize)
     t_obj.set_bbox(dict(facecolor=bgcolor, edgecolor=edgecolor, alpha=bgalpha))
     t_obj.set_position((10, position + video_size[1] - 30))
@@ -177,24 +177,27 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
   if "summary" in texts:
     t_obj = add_text(texts["summary"]["text"], 14,
                      texts['summary']["bgcolor"],
-                     texts['summary']["edgecolor"], 0.5)
+                     texts['summary']["edgecolor"], 0.5,
+                     texts['summary']["text_color"])
     t_obj.fade_start = fade_base + 0.4    # 詳細文は+0.4秒後
     text_objs.append(t_obj)
   if "subtitle" in texts:
     t_obj = add_text(texts["subtitle"]["text"], 16,
                      texts['subtitle']["bgcolor"],
-                     texts['subtitle']["edgecolor"], 0.5)
+                     texts['subtitle']["edgecolor"], 0.5,
+                     texts['subtitle']["text_color"])
     t_obj.fade_start = fade_base + 0.2    # サブタイトルは+0.2秒後
     text_objs.append(t_obj)
   if "title" in texts:
     t_obj = add_text(texts["title"]["text"], 20,
                      texts['title']["bgcolor"],
-                     texts['title']["edgecolor"], 0.5)
+                     texts['title']["edgecolor"], 0.5,
+                     texts['title']["text_color"])
     t_obj.fade_start = fade_base        # タイトルは基準時刻
     text_objs.append(t_obj)
   return text_objs
 
-def draw_text(ax: Axes, video_size: tuple[int, int], text: str, font_name: str="BIZ UDGothic", init_alpha:float=0) -> plt.Text:
+def draw_text(ax: Axes, video_size: tuple[int, int], text: str, font_name: str="BIZ UDGothic", init_alpha:float=0, text_color: str="white") -> plt.Text:
   """
   テキストを描画する関数。
 
@@ -203,10 +206,11 @@ def draw_text(ax: Axes, video_size: tuple[int, int], text: str, font_name: str="
   text: 描画するテキスト
   font_name: フォント名（デフォルトは BIZ UDGothic）
   init_alpha: テキストの初期透明度（デフォルトは0/テスト時などは1を設定）
+  text_color: テキストの色（デフォルトは白）
   """
   txt = ax.text(
     10, video_size[1] - 10, text,
-    color="white",
+    color=text_color,
     fontsize=16,
     verticalalignment="top",
     alpha=init_alpha,
@@ -330,12 +334,19 @@ def create_audio_visualizer(
   title: str=None,
   title_bg_color: str="darkblue",
   title_edge_color: str="black",
+  title_text_color: str="white",        # 新規追加：タイトル文字色
   subtitle: str=None,
   subtitle_bg_color: str="darkgreen",
   subtitle_edge_color: str="black",
+  subtitle_text_color: str="white",      # 新規追加：サブタイトル文字色
   summary: str=None,
   summary_bg_color: str="darkred",
-  summary_edge_color: str="black"
+  summary_edge_color: str="black",
+  summary_text_color: str="white",       # 新規追加：詳細文文字色
+  textarea_bg_color: str="white",        # 新規追加：テキストエリア全体の背景色
+  logo_image: str=None,                  # 新規追加：ロゴ画像パス
+  logo_width: int=0,                     # 新規追加：ロゴ画像幅
+  logo_height: int=0                     # 新規追加：ロゴ画像高さ
 ) -> None:
   """
   Main
@@ -353,12 +364,19 @@ def create_audio_visualizer(
   title: タイトルテキスト
   title_bg_color: タイトル背景色
   title_edge_color: タイトル枠線色
+  title_text_color: タイトル文字色
   subtitle: サブタイトルテキスト
   subtitle_bg_color: サブタイトル背景色
   subtitle_edge_color: サブタイトル枠線色
+  subtitle_text_color: サブタイトル文字色
   summary: 詳細文テキスト
   summary_bg_color: 詳細文背景色
   summary_edge_color: 詳細文枠線色
+  summary_text_color: 詳細文文字色
+  textarea_bg_color: テキストエリア背景色
+  logo_image: ロゴ画像のパス
+  logo_width: ロゴ画像の幅
+  logo_height: ロゴ画像の高さ
   """
   # ID3タグから情報取得（省略時）
   audiofile = MutagenFile(mp3_path, easy=True)
@@ -376,25 +394,33 @@ def create_audio_visualizer(
   fig, ax = setup_figure(video_size, bg_color)
   draw_background(ax, video_size, bg_image_path, bg_image_type)
 
-  # タイトル、サブタイトル、詳細文はそれぞれ個別に描画
+  # テキストやロゴの表示（テキスト領域全体の背景色、ロゴ配置等の処理を必要に応じて追加可能）
+  # ここではdraw_textsに渡すテキスト辞書に、新たな「text_color」を項目として追加しています。
   text_objs = draw_texts(fig, ax, video_size,
     {
       "title": {
         "text": title,
         "bgcolor": title_bg_color,
-        "edgecolor": title_edge_color
+        "edgecolor": title_edge_color,
+        "text_color": title_text_color
       },
       "subtitle": {
         "text": subtitle,
         "bgcolor": subtitle_bg_color,
-        "edgecolor": subtitle_edge_color
+        "edgecolor": subtitle_edge_color,
+        "text_color": subtitle_text_color
       },
       "summary": {
         "text": summary,
         "bgcolor": summary_bg_color,
-        "edgecolor": summary_edge_color
+        "edgecolor": summary_edge_color,
+        "text_color": summary_text_color
       }
-    })
+    }
+  )
+
+  # ※ ここで textarea_bg_color や logo_image, logo_width, logo_height を使った処理を追加可能
+  # 例： ax.imshow(logo_img) など
 
   # ビジュアライザーの準備
   n_bars = 50
@@ -416,8 +442,10 @@ def create_audio_visualizer(
     Path(temp_audio_path).unlink()
 
 def main():
+  import json, os
   parser = argparse.ArgumentParser(description='Create audio visualizer video from MP3')
   parser.add_argument('mp3_path', help='Path to input MP3 file')
+  parser.add_argument('--config', help='Path to JSON configuration file')
   parser.add_argument('--output', default='audio.mp4', help='Output MP4 file path')
   parser.add_argument('--video-width', type=int, default=1280, help='Video width in pixels')
   parser.add_argument('--video-height', type=int, default=720, help='Video height in pixels')
@@ -432,35 +460,96 @@ def main():
   parser.add_argument('--title', help='Title text to display (default: ID3 album name)')
   parser.add_argument('--title-bg-color', default='darkblue', help='Title background color')
   parser.add_argument('--title-edge-color', default='black', help='Title edge color')
+  parser.add_argument('--title-text-color', default='white', help='Title text color')  # 新規追加：タイトル文字色
   parser.add_argument('--subtitle', help='Subtitle text to display (default: ID3 title)')
   parser.add_argument('--subtitle-bg-color', default='darkgreen', help='Subtitle background color')
   parser.add_argument('--subtitle-edge-color', default='black', help='Subtitle edge color')
+  parser.add_argument('--subtitle-text-color', default='white', help='Subtitle text color')  # 新規追加：サブタイトル文字色
   parser.add_argument('--summary', help='Summary text to display (default: first line of ID3 comment)')
   parser.add_argument('--summary-bg-color', default='darkred', help='Summary background color')
   parser.add_argument('--summary-edge-color', default='black', help='Summary edge color')
+  parser.add_argument('--summary-text-color', default='white', help='Summary text color')  # 新規追加：詳細文文字色
+  parser.add_argument('--textarea-bg-color', default='white', help='Textarea background color')  # 新規追加：テキストエリア全体の背景色
+  parser.add_argument('--logo-image', help='Path to logo image file')  # 新規追加：ロゴ画像パス
+  parser.add_argument('--logo-width', type=int, default=0, help='Logo image width')  # 新規追加：ロゴ画像幅
+  parser.add_argument('--logo-height', type=int, default=0, help='Logo image height')  # 新規追加：ロゴ画像高さ
 
   args = parser.parse_args()
+
+  config = {}
+  if args.config and os.path.isfile(args.config):
+    with open(args.config, 'r', encoding='utf-8') as f:
+      config = json.load(f)
+
+  # 動画サイズ（コマンドライン > JSON > デフォルト）
+  video_width = args.video_width if args.video_width is not None else config.get("video", {}).get("width", 1280)
+  video_height = args.video_height if args.video_height is not None else config.get("video", {}).get("height", 720)
+  video_size = (video_width, video_height)
+
+  # ビジュアライザーサイズと色
+  viz_width = args.viz_width if args.viz_width is not None else config.get("vizualizer", {}).get("width", 1080)
+  viz_height = args.viz_height if args.viz_height is not None else config.get("vizualizer", {}).get("height", 520)
+  viz_size = (viz_width, viz_height)
+  viz_color = args.viz_color if args.viz_color is not None else config.get("vizualizer", {}).get("color", "gradation")
+
+  # 背景関連
+  bg_color = args.bg_color if args.bg_color is not None else config.get("background", {}).get("color", "black")
+  bg_image = args.bg_image if args.bg_image is not None else config.get("background", {}).get("image", None)
+  bg_image_type = args.bg_image_type if args.bg_image_type is not None else config.get("background", {}).get("image_type", "streach")
+
+  # その他パラメータ
+  loop_count = args.loop_count if args.loop_count is not None else config.get("loop_count", 1)
+  effect = args.effect if args.effect is not None else config.get("effect", "")
+
+  # テキスト領域（textarea）から値を取得（コマンドライン優先）
+  textarea = config.get("textarea", {})
+  title_text = args.title if args.title is not None else textarea.get("title", {}).get("text", None)
+  title_bg_color = args.title_bg_color if args.title_bg_color is not None else textarea.get("title", {}).get("bg_color", "darkblue")
+  title_edge_color = args.title_edge_color if args.title_edge_color is not None else textarea.get("title", {}).get("edge_color", "black")
+  title_text_color = args.title_text_color if args.title_text_color is not None else textarea.get("title", {}).get("text_color", "white")
+
+  subtitle_text = args.subtitle if args.subtitle is not None else textarea.get("subtitle", {}).get("text", None)
+  subtitle_bg_color = args.subtitle_bg_color if args.subtitle_bg_color is not None else textarea.get("subtitle", {}).get("bg_color", "darkgreen")
+  subtitle_edge_color = args.subtitle_edge_color if args.subtitle_edge_color is not None else textarea.get("subtitle", {}).get("edge_color", "black")
+  subtitle_text_color = args.subtitle_text_color if args.subtitle_text_color is not None else textarea.get("subtitle", {}).get("text_color", "white")
+
+  summary_text = args.summary if args.summary is not None else textarea.get("summary", {}).get("text", None)
+  summary_bg_color = args.summary_bg_color if args.summary_bg_color is not None else textarea.get("summary", {}).get("bg_color", "darkred")
+  summary_edge_color = args.summary_edge_color if args.summary_edge_color is not None else textarea.get("summary", {}).get("edge_color", "black")
+  summary_text_color = args.summary_text_color if args.summary_text_color is not None else textarea.get("summary", {}).get("text_color", "white")
+
+  textarea_bg_color = args.textarea_bg_color if args.textarea_bg_color is not None else textarea.get("bg_color", "white")
+  logo_image = args.logo_image if args.logo_image is not None else config.get("logo", {}).get("image", None)
+  logo_width = args.logo_width if args.logo_width is not None else config.get("logo", {}).get("width", 0)
+  logo_height = args.logo_height if args.logo_height is not None else config.get("logo", {}).get("height", 0)
 
   create_audio_visualizer(
     args.mp3_path,
     args.output,
-    (args.video_width, args.video_height),
-    (args.viz_width, args.viz_height),
-    args.bg_color,
-    args.viz_color,
-    args.loop_count,
-    args.bg_image,
-    args.bg_image_type,
-    args.effect,
-    args.title,
-    args.title_bg_color,
-    args.title_edge_color,
-    args.subtitle,
-    args.subtitle_bg_color,
-    args.subtitle_edge_color,
-    args.summary,
-    args.summary_bg_color,
-    args.summary_edge_color
+    video_size,
+    viz_size,
+    bg_color,
+    viz_color,
+    loop_count,
+    bg_image,
+    bg_image_type,
+    effect,
+    title_text,
+    title_bg_color,
+    title_edge_color,
+    title_text_color,
+    subtitle_text,
+    subtitle_bg_color,
+    subtitle_edge_color,
+    subtitle_text_color,
+    summary_text,
+    summary_bg_color,
+    summary_edge_color,
+    summary_text_color,
+    textarea_bg_color,
+    logo_image,
+    logo_width,
+    logo_height
   )
 
 if __name__ == '__main__':
