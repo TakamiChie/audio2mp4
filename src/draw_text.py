@@ -51,18 +51,20 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
   テキストを描画する。タイトル、サブタイトル、詳細文をそれぞれ描画する
   表示開始は、タイトル: fade_base, サブタイトル: fade_base + 0.1, 詳細文: fade_base + 0.2
 
-  fig: 図オブジェクト
-  ax: 軸オブジェクト
-  video_size: 動画のサイズ
-  texts: タイトル、サブタイトル、詳細文のテキストを格納した辞書
-    title: タイトルのテキスト
-    subtitle: サブタイトルのテキスト
-    summary: 詳細文のテキスト
-  init_alpha: テキストの初期透明度（デフォルトは0/テスト時などは1を設定）
-  fade_base: フェードイン開始時間（デフォルトは2.0秒）
-  textarea_bg_color: テキストエリア全体の背景色
+  Args:
+    fig: 図オブジェクト
+    ax: 軸オブジェクト
+    video_size: 動画のサイズ
+    texts: タイトル、サブタイトル、詳細文のテキストを格納した辞書
+      title: タイトルのテキスト
+      subtitle: サブタイトルのテキスト
+      summary: 詳細文のテキスト
+    init_alpha: テキストの初期透明度（デフォルトは0/テスト時などは1を設定）
+    fade_base: フェードイン開始時間（デフォルトは2.0秒）
+    textarea_bg_color: テキストエリア全体の背景色
+
   Returns:
-    tuple[list[plt.Text], int]: 描画されたテキストオブジェクトのリストと、最終的な垂直方向のポジション
+    list[plt.Text]: 描画されたテキストオブジェクトのリスト
   """
   text_objs = []
   position = 5
@@ -104,7 +106,7 @@ def draw_texts(fig: Figure, ax: Axes, video_size: tuple[int, int], texts: dict[s
   if textarea_bg_color:
     # テキストエリアの背景を描画する
     draw_text_rect(fig, ax, video_size, position + margin * 1.5, textarea_bg_color)
-  return text_objs, position
+  return text_objs
 
 def draw_text(ax: Axes, video_size: tuple[int, int], text: str, font_name: str="BIZ UDGothic", init_alpha:float=0, text_color: str="white") -> plt.Text:
   """
